@@ -1,0 +1,18 @@
+name: Slack Notify on Discussion Comment
+
+on:
+  discussion_comment:
+    types: [created]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify to Slack via Incoming Webhook
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} # リポジトリの Secrets に登録しておく
+        run: |
+          COMMENT_BODY=$(echo "${{ github.event.comment.body }}" | sed 's/"/\\"/g' | sed "s/'/\\'/g")
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"【新しいコメントが追加されました】\\nリポジトリ: ${{ github.repository }}\\nタイトル: ${{ github.event.discussion.title }}\\nコメント: $COMMENT_BODY\\nURL: ${{ github.event.discussion.html_url }}\"}" \
+            $SLACK_WEBHOOK_URL
